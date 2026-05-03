@@ -3,7 +3,7 @@ import { Navigate, useNavigate, useParams } from "react-router-dom";
 import * as Icons from "lucide-react";
 import { Boxes, LogOut, Search, Bell } from "lucide-react";
 import { roleConfig, Role } from "@/lib/asset-data";
-import { renderSection } from "@/components/dashboard/sections";
+import { DashboardSections } from "@/components/dashboard/sections";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -109,7 +109,7 @@ const Dashboard = () => {
               <p className="text-muted-foreground mt-1.5 max-w-2xl">{cfg.tagline}</p>
             </div>
 
-            {renderSection(role as Role, active)}
+            <DashboardSections role={role as Role} sectionId={active} />
           </main>
         </div>
       </div>
