@@ -109,7 +109,7 @@ const Dashboard = () => {
               <p className="text-muted-foreground mt-1.5 max-w-2xl">{cfg.tagline}</p>
             </div>
 
-            {renderSection(role as Role, active)}
+            <DashboardSections role={role as Role} sectionId={active} />
           </main>
         </div>
       </div>
