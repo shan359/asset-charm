@@ -248,9 +248,10 @@ export const DashboardSections = ({ role, sectionId }: { role: Role; sectionId: 
       </Section>;
 
     if (sectionId === "employees")
-      return <Section title="Employees" desc="People and their assigned hardware.">
+      return <Section title="Employees" desc="People and their assigned hardware."
+        action={role === "admin" ? <Button size="sm" onClick={() => setAddEmpOpen(true)} className="bg-gradient-primary text-primary-foreground hover:opacity-90"><PackagePlus className="h-4 w-4 mr-1.5" />Add Employee</Button> : undefined}>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {mockEmployees.map((e) => (
+          {employees.map((e) => (
             <div key={e.id} className="glass rounded-2xl p-5 hover:-translate-y-0.5 transition-transform">
               <div className="flex items-center gap-3">
                 <div className="h-11 w-11 rounded-xl bg-gradient-accent flex items-center justify-center font-semibold text-accent-foreground">{e.name.split(" ").map(n => n[0]).join("")}</div>
