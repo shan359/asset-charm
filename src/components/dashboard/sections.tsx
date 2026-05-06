@@ -246,8 +246,8 @@ export const DashboardSections = ({ role, sectionId }: { role: Role; sectionId: 
       </Section>;
 
     if (sectionId === "requests" || sectionId === "requested")
-      return <Section title="Asset Requests" desc="Review pending and recent requests.">
-        <Table headers={["ID", "Employee", "Item", "Date", "Status", ""]} rows={requests.map((r) => [
+      return <Section title="Asset Requests" desc="Review pending and recent requests from employees.">
+        <Table headers={["ID", "Employee", "Item", "Date", "Status", ""]} rows={filterRequests().map((r) => [
           <span className="font-mono text-xs text-muted-foreground">{r.id}</span>, r.employee, r.item, r.date, <StatusPill status={r.status} />,
           <div className="flex gap-1 justify-end">
             {r.status === "Pending" ? (<>
@@ -255,7 +255,7 @@ export const DashboardSections = ({ role, sectionId }: { role: Role; sectionId: 
               <Button size="sm" variant="ghost" className="text-destructive" onClick={() => updateRequest(r.id, "Rejected")}><X className="h-4 w-4 mr-1" />Reject</Button>
             </>) : <Button size="sm" variant="ghost" onClick={() => updateRequest(r.id, "Pending")}>Reopen</Button>}
           </div>,
-        ])} />
+        ])} empty="No requests match your search." />
       </Section>;
 
     if (sectionId === "employees")
