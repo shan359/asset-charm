@@ -6,6 +6,7 @@ import { roleConfig, Role } from "@/lib/asset-data";
 import { DashboardSections } from "@/components/dashboard/sections";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { store, useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 const Dashboard = () => {
