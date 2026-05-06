@@ -408,6 +408,25 @@ export const DashboardSections = ({ role, sectionId }: { role: Role; sectionId: 
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Add employee */}
+      <Dialog open={addEmpOpen} onOpenChange={setAddEmpOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add new employee</DialogTitle>
+            <DialogDescription>Create a new employee record in the directory.</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleAddEmployee} className="space-y-4">
+            <div className="space-y-2"><Label>Full name</Label><Input value={empForm.name} onChange={(e) => setEmpForm({ ...empForm, name: e.target.value })} placeholder="e.g. Aditya Singh" /></div>
+            <div className="space-y-2"><Label>Role</Label><Input value={empForm.role} onChange={(e) => setEmpForm({ ...empForm, role: e.target.value })} placeholder="e.g. Senior Engineer" /></div>
+            <div className="space-y-2"><Label>Department</Label><Input value={empForm.dept} onChange={(e) => setEmpForm({ ...empForm, dept: e.target.value })} placeholder="e.g. Engineering" /></div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setAddEmpOpen(false)}>Cancel</Button>
+              <Button type="submit" className="bg-gradient-primary text-primary-foreground hover:opacity-90"><PackagePlus className="h-4 w-4 mr-2" />Add Employee</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
