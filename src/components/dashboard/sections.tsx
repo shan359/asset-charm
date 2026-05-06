@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { mockAssets, mockRequests, mockEmployees, mockTasks, Role } from "@/lib/asset-data";
+import { store, useAppStore } from "@/lib/store";
 import { StatCard, Section, StatusPill } from "./Primitives";
 import { Boxes, Inbox, Users, Wrench, PackageCheck, UserCheck, ListChecks, CheckCircle2, PackagePlus, Trash2, Check, X, Eye, Pencil, Send, Filter, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -53,15 +54,17 @@ const exportCsv = (filename: string, headers: string[], rows: (string | number)[
 };
 
 export const DashboardSections = ({ role, sectionId }: { role: Role; sectionId: string }) => {
-  const [assets, setAssets] = useState<Asset[]>(mockAssets);
-  const [requests, setRequests] = useState<Request[]>(mockRequests);
-  const [tasks, setTasks] = useState<Task[]>(mockTasks);
-  const [query, setQuery] = useState("");
+  const { assets, requests, tasks, employees, query } = useAppStore();
+  const setAssets = (fn: (a: Asset[]) => Asset[]) => store.setAssets(fn);
+  const setRequests = (fn: (r: Request[]) => Request[]) => store.setRequests(fn);
+  const setTasks = (fn: (t: Task[]) => Task[]) => store.setTasks(fn);
+  const setEmployees = (fn: (e: typeof employees) => typeof employees) => store.setEmployees(fn);
+  const setQuery = (q: string) => store.setQuery(q);
+
   const [viewing, setViewing] = useState<Asset | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Asset | null>(null);
   const [form, setForm] = useState({ name: "", category: "", serial: "", location: "", notes: "" });
   const [reqForm, setReqForm] = useState({ item: "", reason: "", priority: "Medium" });
-  const [employees, setEmployees] = useState(mockEmployees);
   const [addEmpOpen, setAddEmpOpen] = useState(false);
   const [empForm, setEmpForm] = useState({ name: "", role: "", dept: "" });
 
@@ -81,8 +84,16 @@ export const DashboardSections = ({ role, sectionId }: { role: Role; sectionId: 
     toast.success(`${newEmp.name} added to ${newEmp.dept}`);
   };
 
+  const q = query.toLowerCase();
+  const matches = (s: string) => !q || s.toLowerCase().includes(q);
   const filterAssets = (extra?: (a: Asset) => boolean) =>
-    assets.filter((a) => (!extra || extra(a)) && (!query || `${a.id} ${a.name} ${a.category} ${a.assignee} ${a.location}`.toLowerCase().includes(query.toLowerCase())));
+    assets.filter((a) => (!extra || extra(a)) && matches(`${a.id} ${a.name} ${a.category} ${a.assignee} ${a.location} ${a.status}`));
+  const filterRequests = (extra?: (r: Request) => boolean) =>
+    requests.filter((r) => (!extra || extra(r)) && matches(`${r.id} ${r.employee} ${r.item} ${r.date} ${r.status}`));
+  const filterTasks = (extra?: (t: Task) => boolean) =>
+    tasks.filter((t) => (!extra || extra(t)) && matches(`${t.id} ${t.title} ${t.assignee} ${t.due} ${t.status}`));
+  const filterEmployees = () =>
+    employees.filter((e) => matches(`${e.id} ${e.name} ${e.role} ${e.dept}`));
 
   const assetActions = (a: Asset) => (
     <div className="flex gap-1 justify-end">
@@ -235,8 +246,8 @@ export const DashboardSections = ({ role, sectionId }: { role: Role; sectionId: 
       </Section>;
 
     if (sectionId === "requests" || sectionId === "requested")
-      return <Section title="Asset Requests" desc="Review pending and recent requests.">
-        <Table headers={["ID", "Employee", "Item", "Date", "Status", ""]} rows={requests.map((r) => [
+      return <Section title="Asset Requests" desc="Review pending and recent requests from employees.">
+        <Table headers={["ID", "Employee", "Item", "Date", "Status", ""]} rows={filterRequests().map((r) => [
           <span className="font-mono text-xs text-muted-foreground">{r.id}</span>, r.employee, r.item, r.date, <StatusPill status={r.status} />,
           <div className="flex gap-1 justify-end">
             {r.status === "Pending" ? (<>
@@ -244,14 +255,14 @@ export const DashboardSections = ({ role, sectionId }: { role: Role; sectionId: 
               <Button size="sm" variant="ghost" className="text-destructive" onClick={() => updateRequest(r.id, "Rejected")}><X className="h-4 w-4 mr-1" />Reject</Button>
             </>) : <Button size="sm" variant="ghost" onClick={() => updateRequest(r.id, "Pending")}>Reopen</Button>}
           </div>,
-        ])} />
+        ])} empty="No requests match your search." />
       </Section>;
 
     if (sectionId === "employees")
       return <Section title="Employees" desc="People and their assigned hardware."
         action={role === "admin" ? <Button size="sm" onClick={() => setAddEmpOpen(true)} className="bg-gradient-primary text-primary-foreground hover:opacity-90"><PackagePlus className="h-4 w-4 mr-1.5" />Add Employee</Button> : undefined}>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {employees.map((e) => (
+          {filterEmployees().map((e) => (
             <div key={e.id} className="glass rounded-2xl p-5 hover:-translate-y-0.5 transition-transform">
               <div className="flex items-center gap-3">
                 <div className="h-11 w-11 rounded-xl bg-gradient-accent flex items-center justify-center font-semibold text-accent-foreground">{e.name.split(" ").map(n => n[0]).join("")}</div>
@@ -293,14 +304,14 @@ export const DashboardSections = ({ role, sectionId }: { role: Role; sectionId: 
 
     if (sectionId === "tasks-assigned")
       return <Section title="Assigned Tasks">
-        <Table headers={["ID", "Task", "Assignee", "Due", "Status", ""]} rows={tasks.filter(t => t.status !== "Completed").map((t) => [
+        <Table headers={["ID", "Task", "Assignee", "Due", "Status", ""]} rows={filterTasks(t => t.status !== "Completed").map((t) => [
           <span className="font-mono text-xs text-muted-foreground">{t.id}</span>, t.title, t.assignee, t.due, <StatusPill status={t.status} />,
           <Button size="sm" variant="outline" onClick={() => completeTask(t.id)}><Check className="h-4 w-4 mr-1" />Complete</Button>,
         ])} empty="No assigned tasks. Great job!" />
       </Section>;
     if (sectionId === "tasks-completed")
       return <Section title="Completed Tasks">
-        <Table headers={["ID", "Task", "Assignee", "Due", "Status"]} rows={tasks.filter(t => t.status === "Completed").map((t) => [
+        <Table headers={["ID", "Task", "Assignee", "Due", "Status"]} rows={filterTasks(t => t.status === "Completed").map((t) => [
           <span className="font-mono text-xs text-muted-foreground">{t.id}</span>, t.title, t.assignee, t.due, <StatusPill status={t.status} />,
         ])} />
       </Section>;
