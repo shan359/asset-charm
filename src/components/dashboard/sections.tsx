@@ -304,14 +304,14 @@ export const DashboardSections = ({ role, sectionId }: { role: Role; sectionId: 
 
     if (sectionId === "tasks-assigned")
       return <Section title="Assigned Tasks">
-        <Table headers={["ID", "Task", "Assignee", "Due", "Status", ""]} rows={tasks.filter(t => t.status !== "Completed").map((t) => [
+        <Table headers={["ID", "Task", "Assignee", "Due", "Status", ""]} rows={filterTasks(t => t.status !== "Completed").map((t) => [
           <span className="font-mono text-xs text-muted-foreground">{t.id}</span>, t.title, t.assignee, t.due, <StatusPill status={t.status} />,
           <Button size="sm" variant="outline" onClick={() => completeTask(t.id)}><Check className="h-4 w-4 mr-1" />Complete</Button>,
         ])} empty="No assigned tasks. Great job!" />
       </Section>;
     if (sectionId === "tasks-completed")
       return <Section title="Completed Tasks">
-        <Table headers={["ID", "Task", "Assignee", "Due", "Status"]} rows={tasks.filter(t => t.status === "Completed").map((t) => [
+        <Table headers={["ID", "Task", "Assignee", "Due", "Status"]} rows={filterTasks(t => t.status === "Completed").map((t) => [
           <span className="font-mono text-xs text-muted-foreground">{t.id}</span>, t.title, t.assignee, t.due, <StatusPill status={t.status} />,
         ])} />
       </Section>;
