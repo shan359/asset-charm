@@ -13,6 +13,7 @@ const Dashboard = () => {
   const { role } = useParams<{ role: string }>();
   const navigate = useNavigate();
   const [active, setActive] = useState("overview");
+  const { query } = useAppStore();
 
   if (!role || !(role in roleConfig)) return <Navigate to="/" replace />;
   const cfg = roleConfig[role as Role];
