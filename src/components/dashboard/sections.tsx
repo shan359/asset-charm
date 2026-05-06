@@ -84,8 +84,16 @@ export const DashboardSections = ({ role, sectionId }: { role: Role; sectionId: 
     toast.success(`${newEmp.name} added to ${newEmp.dept}`);
   };
 
+  const q = query.toLowerCase();
+  const matches = (s: string) => !q || s.toLowerCase().includes(q);
   const filterAssets = (extra?: (a: Asset) => boolean) =>
-    assets.filter((a) => (!extra || extra(a)) && (!query || `${a.id} ${a.name} ${a.category} ${a.assignee} ${a.location}`.toLowerCase().includes(query.toLowerCase())));
+    assets.filter((a) => (!extra || extra(a)) && matches(`${a.id} ${a.name} ${a.category} ${a.assignee} ${a.location} ${a.status}`));
+  const filterRequests = (extra?: (r: Request) => boolean) =>
+    requests.filter((r) => (!extra || extra(r)) && matches(`${r.id} ${r.employee} ${r.item} ${r.date} ${r.status}`));
+  const filterTasks = (extra?: (t: Task) => boolean) =>
+    tasks.filter((t) => (!extra || extra(t)) && matches(`${t.id} ${t.title} ${t.assignee} ${t.due} ${t.status}`));
+  const filterEmployees = () =>
+    employees.filter((e) => matches(`${e.id} ${e.name} ${e.role} ${e.dept}`));
 
   const assetActions = (a: Asset) => (
     <div className="flex gap-1 justify-end">
