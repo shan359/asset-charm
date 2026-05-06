@@ -54,15 +54,17 @@ const exportCsv = (filename: string, headers: string[], rows: (string | number)[
 };
 
 export const DashboardSections = ({ role, sectionId }: { role: Role; sectionId: string }) => {
-  const [assets, setAssets] = useState<Asset[]>(mockAssets);
-  const [requests, setRequests] = useState<Request[]>(mockRequests);
-  const [tasks, setTasks] = useState<Task[]>(mockTasks);
-  const [query, setQuery] = useState("");
+  const { assets, requests, tasks, employees, query } = useAppStore();
+  const setAssets = (fn: (a: Asset[]) => Asset[]) => store.setAssets(fn);
+  const setRequests = (fn: (r: Request[]) => Request[]) => store.setRequests(fn);
+  const setTasks = (fn: (t: Task[]) => Task[]) => store.setTasks(fn);
+  const setEmployees = (fn: (e: typeof employees) => typeof employees) => store.setEmployees(fn);
+  const setQuery = (q: string) => store.setQuery(q);
+
   const [viewing, setViewing] = useState<Asset | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Asset | null>(null);
   const [form, setForm] = useState({ name: "", category: "", serial: "", location: "", notes: "" });
   const [reqForm, setReqForm] = useState({ item: "", reason: "", priority: "Medium" });
-  const [employees, setEmployees] = useState(mockEmployees);
   const [addEmpOpen, setAddEmpOpen] = useState(false);
   const [empForm, setEmpForm] = useState({ name: "", role: "", dept: "" });
 
