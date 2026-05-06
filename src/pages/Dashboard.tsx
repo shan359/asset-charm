@@ -71,14 +71,6 @@ const Dashboard = () => {
                 <Bell className="h-5 w-5" />
                 <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-accent" />
               </Button>
-              <Button
-                variant="outline"
-                onClick={() => navigate("/")}
-                className="border-border/60 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/40"
-              >
-                <LogOut className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Sign out</span>
-              </Button>
               <div className="h-9 w-9 rounded-full bg-gradient-accent flex items-center justify-center text-sm font-semibold text-accent-foreground">
                 {cfg.label[0]}
               </div>
