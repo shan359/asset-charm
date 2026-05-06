@@ -67,7 +67,7 @@ const Dashboard = () => {
             <div className="flex items-center gap-4 px-6 py-3.5">
               <div className="flex-1 max-w-md relative">
                 <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <Input placeholder="Search assets, employees, requests..." className="pl-9 bg-secondary/50 border-border/60" />
+                <Input value={query} onChange={(e) => store.setQuery(e.target.value)} placeholder="Search assets, employees, requests..." className="pl-9 bg-secondary/50 border-border/60" />
               </div>
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-5 w-5" />
