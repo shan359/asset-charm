@@ -1,9 +1,18 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Shield, PackageOpen, User, ArrowRight, Boxes } from "lucide-react";
+import { Shield, PackageOpen, User, ArrowRight, Boxes, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
 import { Role } from "@/lib/asset-data";
 import { cn } from "@/lib/utils";
 
@@ -13,24 +22,86 @@ const roles: { id: Role; title: string; desc: string; Icon: typeof Shield }[] = 
   { id: "employee", title: "Employee", desc: "View your assets and request new ones.", Icon: User },
 ];
 
+type EmployeeAccount = { name: string; email: string; password: string };
+const STORAGE_KEY = "asset-tracker:employee-accounts";
+
+const loadAccounts = (): EmployeeAccount[] => {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+  } catch {
+    return [];
+  }
+};
+
 const Login = () => {
   const navigate = useNavigate();
   const [role, setRole] = useState<Role>("admin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  const [signupOpen, setSignupOpen] = useState(false);
+  const [accounts, setAccounts] = useState<EmployeeAccount[]>([]);
+  const [signup, setSignup] = useState({ name: "", email: "", password: "", confirm: "" });
+
+  useEffect(() => {
+    setAccounts(loadAccounts());
+  }, []);
+
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (role === "employee") {
+      const list = loadAccounts();
+      const match = list.find(
+        (a) => a.email.toLowerCase() === email.trim().toLowerCase() && a.password === password,
+      );
+      if (!match) {
+        toast.error("No employee account found. Please create one first.");
+        return;
+      }
+      toast.success(`Welcome back, ${match.name}`);
+    }
     navigate(`/dashboard/${role}`);
+  };
+
+  const handleSignup = (e: React.FormEvent) => {
+    e.preventDefault();
+    const name = signup.name.trim();
+    const mail = signup.email.trim().toLowerCase();
+    if (!name || !mail || !signup.password) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+    if (signup.password.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+    if (signup.password !== signup.confirm) {
+      toast.error("Passwords do not match");
+      return;
+    }
+    const list = loadAccounts();
+    if (list.some((a) => a.email.toLowerCase() === mail)) {
+      toast.error("An account with this email already exists");
+      return;
+    }
+    const next = [...list, { name, email: mail, password: signup.password }];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    setAccounts(next);
+    toast.success("Account created — you can now sign in");
+    setRole("employee");
+    setEmail(mail);
+    setPassword(signup.password);
+    setSignup({ name: "", email: "", password: "", confirm: "" });
+    setSignupOpen(false);
   };
 
   return (
     <main className="min-h-screen bg-gradient-hero relative overflow-hidden">
-      {/* Decorative grid */}
       <div
         className="absolute inset-0 opacity-[0.04] pointer-events-none"
         style={{
-          backgroundImage: "linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)",
+          backgroundImage:
+            "linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)",
           backgroundSize: "48px 48px",
         }}
       />
@@ -38,7 +109,6 @@ const Login = () => {
       <div className="absolute -bottom-40 -left-40 h-[500px] w-[500px] rounded-full bg-accent/10 blur-3xl" />
 
       <div className="relative container mx-auto px-6 py-10 grid lg:grid-cols-2 gap-12 items-center min-h-screen">
-        {/* Left: brand panel */}
         <section className="hidden lg:flex flex-col gap-8 animate-fade-up">
           <div className="flex items-center gap-3">
             <div className="h-11 w-11 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow">
@@ -72,7 +142,6 @@ const Login = () => {
           </div>
         </section>
 
-        {/* Right: login card */}
         <section className="w-full max-w-md mx-auto lg:ml-auto animate-fade-up">
           <div className="glass rounded-3xl p-8 shadow-elegant">
             <div className="lg:hidden flex items-center gap-2 mb-6">
@@ -95,7 +164,7 @@ const Login = () => {
                     "group flex flex-col items-center gap-2 p-3 rounded-xl border transition-all text-xs",
                     role === id
                       ? "border-primary bg-primary/10 text-foreground shadow-glow"
-                      : "border-border bg-secondary/40 text-muted-foreground hover:text-foreground hover:border-border/80"
+                      : "border-border bg-secondary/40 text-muted-foreground hover:text-foreground hover:border-border/80",
                   )}
                 >
                   <Icon className={cn("h-5 w-5", role === id && "text-primary")} />
@@ -134,18 +203,115 @@ const Login = () => {
                 />
               </div>
 
-              <Button type="submit" className="w-full h-11 bg-gradient-primary text-primary-foreground hover:opacity-90 font-semibold shadow-glow">
+              <Button
+                type="submit"
+                className="w-full h-11 bg-gradient-primary text-primary-foreground hover:opacity-90 font-semibold shadow-glow"
+              >
                 Sign in as {roles.find((r) => r.id === role)?.title}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </form>
 
-            <p className="text-xs text-center text-muted-foreground mt-6">
-              Demo login — any credentials work.
-            </p>
+            {role === "employee" ? (
+              <>
+                <div className="flex items-center gap-3 my-5">
+                  <div className="h-px flex-1 bg-border" />
+                  <span className="text-xs text-muted-foreground">New here?</span>
+                  <div className="h-px flex-1 bg-border" />
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setSignupOpen(true)}
+                  className="w-full h-11 border-border/60 hover:bg-primary/10 hover:text-foreground hover:border-primary/40"
+                >
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  Create employee account
+                </Button>
+                <p className="text-xs text-center text-muted-foreground mt-4">
+                  {accounts.length > 0
+                    ? `${accounts.length} employee account${accounts.length > 1 ? "s" : ""} on this device.`
+                    : "Sign up is available for employees only."}
+                </p>
+              </>
+            ) : (
+              <p className="text-xs text-center text-muted-foreground mt-6">
+                Demo login — any credentials work for {roles.find((r) => r.id === role)?.title}.
+              </p>
+            )}
           </div>
         </section>
       </div>
+
+      <Dialog open={signupOpen} onOpenChange={setSignupOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create employee account</DialogTitle>
+            <DialogDescription>
+              Account creation is available for employees only. Admin and allocator access is
+              provisioned by your administrator.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSignup} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="su-name">Full name</Label>
+              <Input
+                id="su-name"
+                value={signup.name}
+                onChange={(e) => setSignup((s) => ({ ...s, name: e.target.value }))}
+                placeholder="Jane Doe"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="su-email">Work email</Label>
+              <Input
+                id="su-email"
+                type="email"
+                value={signup.email}
+                onChange={(e) => setSignup((s) => ({ ...s, email: e.target.value }))}
+                placeholder="jane@company.com"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="su-pass">Password</Label>
+                <Input
+                  id="su-pass"
+                  type="password"
+                  value={signup.password}
+                  onChange={(e) => setSignup((s) => ({ ...s, password: e.target.value }))}
+                  placeholder="Min 6 chars"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="su-confirm">Confirm</Label>
+                <Input
+                  id="su-confirm"
+                  type="password"
+                  value={signup.confirm}
+                  onChange={(e) => setSignup((s) => ({ ...s, confirm: e.target.value }))}
+                  placeholder="Repeat password"
+                  required
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="ghost" onClick={() => setSignupOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="bg-gradient-primary text-primary-foreground hover:opacity-90"
+              >
+                Create account
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 };
