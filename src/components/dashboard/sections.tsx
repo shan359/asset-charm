@@ -61,6 +61,25 @@ export const DashboardSections = ({ role, sectionId }: { role: Role; sectionId: 
   const [confirmDelete, setConfirmDelete] = useState<Asset | null>(null);
   const [form, setForm] = useState({ name: "", category: "", serial: "", location: "", notes: "" });
   const [reqForm, setReqForm] = useState({ item: "", reason: "", priority: "Medium" });
+  const [employees, setEmployees] = useState(mockEmployees);
+  const [addEmpOpen, setAddEmpOpen] = useState(false);
+  const [empForm, setEmpForm] = useState({ name: "", role: "", dept: "" });
+
+  const handleAddEmployee = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!empForm.name || !empForm.role || !empForm.dept) return toast.error("All fields are required");
+    const newEmp = {
+      id: `EMP-${String(employees.length + 1).padStart(2, "0")}`,
+      name: empForm.name,
+      role: empForm.role,
+      dept: empForm.dept,
+      assets: 0,
+    };
+    setEmployees((es) => [newEmp, ...es]);
+    setEmpForm({ name: "", role: "", dept: "" });
+    setAddEmpOpen(false);
+    toast.success(`${newEmp.name} added to ${newEmp.dept}`);
+  };
 
   const filterAssets = (extra?: (a: Asset) => boolean) =>
     assets.filter((a) => (!extra || extra(a)) && (!query || `${a.id} ${a.name} ${a.category} ${a.assignee} ${a.location}`.toLowerCase().includes(query.toLowerCase())));
